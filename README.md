@@ -54,19 +54,27 @@ Now UDPping will generate outputs as a normal ping, but the protocol used is `UD
 
 # Advanced Usage
 ```
-root@raspberrypi:~# ./udpping.py
- usage:
-   this_program <dest_ip> <dest_port>
-   this_program <dest_ip> <dest_port> "<options>" 
+$ ./udpping.py -h
+usage: udpping.py [-h] [-l LEN] [-i INTERVAL] [-c COUNT] dest_ip dest_port
 
- options:
-   LEN         the length of payload, unit:byte
-   INTERVAL    the seconds waited between sending each packet, as well as the timeout for reply packet, unit: ms
-   COUNT       the count of packets, default is unlimited
+ping with UDP protocol
 
- examples:
-   ./udpping.py 44.55.66.77 4000
-   ./udpping.py 44.55.66.77 4000 "LEN=400;INTERVAL=2000;COUNT=100"
-   ./udpping.py fe80::5400:ff:aabb:ccdd 4000
+positional arguments:
+  dest_ip               destination IP address(IPv4/IPv6)
+  dest_port             destination port
+
+options:
+  -h, --help            show this help message and exit
+  -l LEN, --len LEN     payload length, unit:byte, default is 64
+  -i INTERVAL, --interval INTERVAL
+                        interval between each packet, unit: ms, default is 1000
+  -c COUNT, --count COUNT
+                        number of packets, default is unlimited
+
+examples:
+  ./udpping.py 44.55.66.77 4000  -l 400 -i 2000
+  ./udpping.py fe80::5400:ff:aabb:ccdd 4000
+  ./udpping.py 44.55.66.77 4000 -l 400 -i 2000 -c 100')
+
    
 ```

@@ -1,23 +1,14 @@
 #!/usr/bin/env python
 
-from __future__ import print_function 
+from __future__ import print_function
 
 import socket
-import sys
 import time
 import string
 import random
 import signal
 import sys
-import os
-
-INTERVAL = 1000  #unit ms
-LEN =64
-IP=""
-PORT=0
-
-COUNT = 0
-HAS_COUNT = False
+import argparse
 
 count=0
 count_of_received=0
@@ -33,7 +24,7 @@ def signal_handler(signal, frame):
 		print('%d packets transmitted, %d received, %.2f%% packet loss'%(count,count_of_received, (count-count_of_received)*100.0/count))
 	if count_of_received!=0:
 		print('rtt min/avg/max = %.2f/%.2f/%.2f ms'%(rtt_min,rtt_sum/count_of_received,rtt_max))
-	os._exit(0)
+	sys.exit(0)
 
 def print_result():
 	if count!=0 and count_of_received!=0:
@@ -43,52 +34,50 @@ def print_result():
 		print('%d packets transmitted, %d received, %.2f%% packet loss'%(count,count_of_received, (count-count_of_received)*100.0/count))
 	if count_of_received!=0:
 		print('rtt min/avg/max = %.2f/%.2f/%.2f ms'%(rtt_min,rtt_sum/count_of_received,rtt_max))
-	os._exit(0)
+	sys.exit(0)
 
 def random_string(length):
-	return ''.join(random.choice(string.ascii_letters+ string.digits ) for m in range(length))
+	return ''.join(random.choice(string.ascii_letters+ string.digits ) for _ in range(length))
 
-if len(sys.argv) != 3 and len(sys.argv)!=4 :
-	print(""" usage:""")
-	print("""   this_program <dest_ip> <dest_port>""")
-	print("""   this_program <dest_ip> <dest_port> "<options>" """)
+epilog_txt = '''
+examples:
+  ./udpping.py 44.55.66.77 4000  -l 400 -i 2000
+  ./udpping.py fe80::5400:ff:aabb:ccdd 4000
+  ./udpping.py 44.55.66.77 4000 -l 400 -i 2000 -c 100')
+'''
+args = argparse.ArgumentParser(description='ping with UDP protocol', epilog= epilog_txt, formatter_class=argparse.RawTextHelpFormatter)
+args.add_argument("dest_ip", type=str, help="destination IP address(IPv4/IPv6)")
+args.add_argument("dest_port", type=int, help="destination port")
+args.add_argument("-l", "--len", type=int, dest="len", help="payload length, unit:byte, default is 64", default=64)
+args.add_argument("-i", "--interval", type=int, dest="interval", help="interval between each packet, unit: ms, default is 1000", default=1000)
+args.add_argument("-c", "--count", type=int, dest="count", help="number of packets, default is unlimited", default=0)
 
-	print()
-	print(""" options:""")
-	print("""   LEN         the length of payload, unit:byte""")
-	print("""   INTERVAL    the seconds waited between sending each packet, as well as the timeout for reply packet, unit: ms""")
-	print("""   COUNT       the count of packet, default is unlimited""")
+args = args.parse_args()
 
-	print()
-	print(" examples:")
-	print("   ./udpping.py 44.55.66.77 4000")
-	print('   ./udpping.py 44.55.66.77 4000 "LEN=400;INTERVAL=2000"')
-	print("   ./udpping.py fe80::5400:ff:aabb:ccdd 4000")
-	print('   ./udpping.py 44.55.66.77 4000 "LEN=400;INTERVAL=2000;COUNT=100"')
-	print()
-
-	exit()
-
-IP=sys.argv[1]
-PORT=int(sys.argv[2])
+IP=args.dest_ip
+PORT=args.dest_port
 
 is_ipv6=0
 
 if IP.find(":")!=-1:
 	is_ipv6=1
 
-if len(sys.argv)==4:
-	exec(sys.argv[3])
-	
+LEN =  args.len if args.len else 64
 if LEN<5:
 	print("LEN must be >=5")
 	exit()
+
+INTERVAL = args.interval if args.interval else 1000
 if INTERVAL<50:
 	print("INTERVAL must be >=50")
 	exit()
 
-if COUNT != 0:
+if args.count:
+	COUNT = args.count
 	HAS_COUNT = True
+else:
+	COUNT = 0
+	HAS_COUNT = False
 
 signal.signal(signal.SIGINT, signal_handler)
 
